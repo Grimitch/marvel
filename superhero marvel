@@ -4,7 +4,6 @@
 #include <memory>
 #include <algorithm>
 
-// Проста утиліта
 using std::string;
 using std::vector;
 using std::shared_ptr;
@@ -12,41 +11,29 @@ using std::make_shared;
 using std::cout;
 using std::endl;
 
-// ----------------- Здібності (абстрактний рівень + "інтерфейси") -----------------
-
-// Базовий абстрактний клас Здатність
 struct Ability {
     virtual ~Ability() = default;
     virtual string name() const = 0;
 };
 
-// "Інтерфейс" політ
 struct IFlight : Ability {
-    // повертає опис польоту / максимально можлива висота тощо
     virtual string flightInfo() const = 0;
 };
-
-// "Інтерфейс" суперсила (сила > щось)
 struct ISuperStrength : Ability {
     virtual int strengthLevel() const = 0; // умовний показник сили
 };
 
-// "Інтерфейс" супершвидкість
 struct ISuperSpeed : Ability {
     virtual double topSpeed() const = 0;
 };
 
-// Рентгенівський зір
 struct IXRayVision : Ability {
     virtual string xrayRange() const = 0;
 };
 
-// Куленепробивність (брутальна проста здатність)
 struct IBulletProof : Ability {
     virtual bool isBulletProof() const = 0;
 };
-
-// ----------------- Реалізації здібностей -----------------
 
 struct FlightJetpack : IFlight {
     string name() const override { return "Jetpack Flight"; }
@@ -82,19 +69,14 @@ struct BulletProofVest : IBulletProof {
     string name() const override { return "Bulletproof"; }
 };
 
-// ----------------- Категорії персонажів (абстрактні) -----------------
-
 struct Alignment { virtual string kind() const = 0; virtual ~Alignment() = default; };
 struct Good : Alignment { string kind() const override { return "Good"; } };
 struct Evil : Alignment { string kind() const override { return "Evil"; } };
 
-// Раса / походження
 struct Race { virtual string name() const = 0; virtual ~Race() = default; };
 struct Human : Race { string name() const override { return "Human"; } };
 struct AnimalRace : Race { string name() const override { return "Animal"; } };
 struct Deity : Race { string name() const override { return "Deity"; } };
-
-// ----------------- Базовий клас СуперГерой -----------------
 
 class SuperHero {
 public:
@@ -110,7 +92,6 @@ public:
 
     void addAbility(const shared_ptr<Ability>& a) { m_abilities.push_back(a); }
 
-    // Перевірка наявності здібності типу T (через dynamic_cast)
     template<typename T>
     bool hasAbility() const {
         for (auto &a : m_abilities) {
@@ -119,7 +100,6 @@ public:
         return false;
     }
 
-    // Повернути всі назви здібностей
     vector<string> abilityNames() const {
         vector<string> out;
         for (auto &a : m_abilities) out.push_back(a->name());
@@ -142,8 +122,6 @@ private:
     shared_ptr<Race> m_race;
     vector<shared_ptr<Ability>> m_abilities;
 };
-
-// ----------------- Конкретні герої -----------------
 
 struct Mystic : SuperHero {
     Mystic(const string& n) : SuperHero(n, make_shared<Good>(), make_shared<Human>()) {
@@ -198,10 +176,7 @@ struct LokiVillain : SuperHero {
     }
 };
 
-// ----------------- Тести в main -----------------
-
 int main() {
-    // Створюємо набір персонажів
     vector<shared_ptr<SuperHero>> roster;
 
     roster.push_back(make_shared<Mystic>("Mystic"));
@@ -213,7 +188,6 @@ int main() {
     roster.push_back(make_shared<ThorHero>("Thor"));
     roster.push_back(make_shared<LokiVillain>("Loki"));
 
-    // Декілька додаткових прикладів: людина з супершвидкістю
     struct FlashLike : SuperHero {
         FlashLike(const string& n) : SuperHero(n, make_shared<Good>(), make_shared<Human>()) {
             addAbility(make_shared<SuperSpeedFlashLike>(1200.0)); // умовна величина
@@ -221,13 +195,11 @@ int main() {
     };
     roster.push_back(make_shared<FlashLike>("Quicksilver"));
 
-    // Виведемо всіх героїв та їх здібності
     cout << "Roster of heroes:\n";
     for (auto &h : roster) {
         cout << " - " << h->descriptor() << '\n';
     }
 
-    // Показати всіх, хто вміє літати (має IFlight)
     cout << "\nHeroes who can FLY:\n";
     for (auto &h : roster) {
         if (h->hasAbility<IFlight>()) {
@@ -235,21 +207,10 @@ int main() {
         }
     }
 
-    // Додатковий тест: знайти найсильнішого (ISuperStrength)
     shared_ptr<SuperHero> strongest = nullptr;
     int bestStrength = -1;
     for (auto &h : roster) {
-        // Ітеруємо здібності через downcast до Ability і перевіряємо ISuperStrength
-        // Оскільки abilities приватні, скористаємося прототипом: перевіримо hasAbility, а потім dynamic_cast через доступ до імені здібностей немає
-        // Отримаємо грубий, але працюючий підхід: через тимчасове створення списку — спрощено: зробимо перевірку через відомі типи:
-        // (у реальній системі додали б метод getAbilities())
         if (h->hasAbility<ISuperStrength>()) {
-            // Щоб дізнатись рівень — потрібно отримати вказівку на саму здатність.
-            // Для короткості — зробимо пошук через речення (не ідеально, але демонстраційно).
-            // У цій реалізації ми не маємо прямого доступу до вектору здібностей, тому пропустимо точний рівень.
-            // Позначимо якісь фіктивні значення за ім'ям.
-            // (На практиці додайте в SuperHero метод getAbilities() для повного доступу).
-            // Тут просто виведемо тих, у кого є сила:
             cout << " * Has super strength: " << h->name() << '\n';
         }
     }
